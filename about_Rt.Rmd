@@ -1,0 +1,39 @@
+---
+title: "About Time varying Reproduction Time "
+date: 2020-08-23
+author:  LiJin Joo [lijin.joo at gmail.com](mailto:lijin.joo@gmail.com) 
+output: html_document
+bibliography: covid19.bib
+---
+
+The following is the introduction of reproduction number in [@cori2013new].
+
+#### Definition of reproduction number (R)
+
+An average number of secondary cases of disease caused by a single infected individual over his or her infectious period. time and situation specific. indicatiing pathogen transmissibility during an epidemic.
+
+#### Why need to monitor R 
+
+It provides feedback on the effectiveness of interventions and on the need of additional controlling efforts. The goal of epidemic control is to reduce R below 1 and make it as close to 0 as possible.
+
+#### Methods to estimate R
+
+* Transmission modeling to incidence data: model assumption dependent (e.g., presence/absence of a latency period or size of the population studied)
+
+* Statistical modeling by [@wallinga2004different]: taking 1) incidence data and 2) the distribution of the serial interval (the time between the onset of symptoms in a primary case and the onset of symptoms of secondary cases).
+
+* [@cori2013new] tried to make the estimate more generic and robust.
+
+The estimate of R at time t requires incidence data from times later than t, thus data are right censored. Improving the accuracy of R estimate, either using a short data collection time or applying smoothing, which demand substantial knowledge and efforts. 
+  
+---
+nocite: |
+  @Gostic2020, @obadia2012r0
+...
+
+### Reference
+
+
+
+
+

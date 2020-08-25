@@ -1,0 +1,10 @@
+name: "{EpiEstim} evalution"
+navbar:
+  left:
+    - text: "About"
+      href: about.html
+    - text: "Five Epidemic Examples"
+      href: eval.html
+    - text: "COVID 19 India "
+      href: covid19.html
+
