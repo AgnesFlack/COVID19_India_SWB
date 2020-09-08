@@ -5,6 +5,7 @@ options(message=-1)
 library(EpiEstim)
 library(ggplot2)
 library("gridExtra")
+library(incidence)
 library(magrittr)
 library(readr)  # for read_csv
 library(knitr)  # for kable
@@ -54,7 +55,7 @@ head(dates_india, 10)
 t_start <- seq(2, length(india_tab) - 4)
 t_end   <- t_start + 4
 
-Rt_covid19 <- EpiEstim::estimate_R(incid = tab_india, method = "parametric_si",
+Rt_covid19 <- EpiEstim::estimate_R(incid = india_tab, method = "parametric_si",
                                    config = make_config(list(mean_si = 7, std_si = 4.5, si_parametric_distr = "G",
                                     t_start = t_start, t_end = t_end, seed = 123)))
 
@@ -103,11 +104,11 @@ hist(R_sample2, col = "grey", breaks=100, main = "R sampled from May 25 - 31")
 abline(v = R_median, col = "red") 
 abline(v = R_CrI, col = "red", lty = 2) 
 
-case_covid19 <- plot(as.incidence(india_tab)) + ggtitle("Covid19-India-Cases")
+case_covid19 <- plot(incidence::as.incidence(india_tab)) + ggtitle("Covid19-India-Cases")
 rt_covid19 <- plot(Rt_covid19, "R") + theme(legend.position = "none") + ggtitle("Covid19-India-Rt")
 si_covid19 <- plot(Rt_covid19, "SI") + theme(legend.position = "none") + ylab("SI frequency") + ggtitle("Covid19-India-SI distribution")
 
-grid.arrange(case_covid19, rt_covid19, si_covid19, nrow = 1)
+gridExtra::grid.arrange(case_covid19, rt_covid19, si_covid19, nrow = 1)
 
 
 ##test on our dashboard data##
@@ -117,20 +118,54 @@ myfile <- "https://raw.githubusercontent.com/saurabhmj/etl-pipeline/draft-data-p
 suppressMessages(mumbai<-read_csv(myfile))
 kable(head(mumbai))
  
-case_series<-as.numeric(unlist(mumbai[-c(1:60),5]))
-case_series  ##111st object is negative. I will use numbers before 111##
-case_date <- unlist(mumbai[-c(1:60, 111:118),1])
+case_series<-as.numeric(unlist(mumbai[-c(1:60,186),5]))
+#case_series  ##111st object is negative. I will use numbers before 111##
+case_date <- unlist(mumbai[-c(1:60, 186),1])
 length(case_series)
 
-t_start <- seq(3,  110 - 4)
+k <-21
+case_series21 <-c()
+for(k in 21:length(case_series)){
+case_series21 <- c(case_series21, mean(case_series[seq(k-20, k)]))
+}
+ 
+
+t_start <- seq(4,  110 - 4)
 t_end   <- t_start + 4
 
+##model1: covid
 Rt_covid_mumbai <- EpiEstim::estimate_R(incid = case_series[1:110], method = "parametric_si",
                                    config = make_config(list(mean_si = 7, std_si = 4.5, si_parametric_distr = "G",
                                                              t_start = t_start, t_end = t_end, seed = 123)))
+t_start <- c(seq(4,  length(case_series)-5))
+t_end   <- t_start + 4
 
-head(data.frame(date=as.Date(unlist(mumbai[-c(1:66, 111:118),1]),  origin = "1970-01-01"),round( Rt_covid_mumbai$R[,c(1:5, 8, 11)],2)))
-tail(data.frame(date=as.Date(unlist(mumbai[-c(1:66, 111:118),1]),  origin = "1970-01-01"),round( Rt_covid_mumbai$R[,c(1:5, 8, 11)],2)), 10)
+Rt_covid_mumbai2 <- EpiEstim::estimate_R(incid = case_series[-c(111)], method = "parametric_si",
+config = make_config(list(mean_si = 7, std_si = 4.5, si_parametric_distr = "G",
+                          t_start = t_start[-c(109)], t_end = t_end[-c(109)], seed = 123)))
+
+
+t_start <- c(seq(4,  length(case_series21)-4))
+t_end   <- t_start + 4
+
+Rt_covid_mumbai3 <- EpiEstim::estimate_R(incid = case_series21, method = "parametric_si",
+config = make_config(list(mean_si = 7, std_si = 4.5, si_parametric_distr = "G",
+                          t_start = t_start[-c(109)], t_end = t_end[-c(109)], seed = 123)))
+
+
+head(data.frame(date=as.Date(case_date[Rt_covid_mumbai$R[,2]],  origin = "1970-01-01"), cases_I= Rt_covid_mumbai$I[Rt_covid_mumbai$R[,2]],
+round( Rt_covid_mumbai$R[,c(1:5, 8, 11)],2)))
+tail(data.frame(date=as.Date(case_date[Rt_covid_mumbai$R[,2]],  origin = "1970-01-01"), cases_I= Rt_covid_mumbai$I[Rt_covid_mumbai$R[,2]],
+round( Rt_covid_mumbai$R[,c(1:5, 8, 11)],2)), 10)
+
+
+tail(data.frame(date=as.Date(case_date[Rt_covid_mumbai2$R[,2]],  origin = "1970-01-01"), cases_I= Rt_covid_mumbai2$I[Rt_covid_mumbai2$R[,2]],
+round( Rt_covid_mumbai2$R[,c(1:5, 8, 11)],2)), 10)
+
+
+tail(data.frame(date=as.Date(case_date[Rt_covid_mumbai3$R[,2]+20],  origin = "1970-01-01"), cases_I= Rt_covid_mumbai3$I[Rt_covid_mumbai3$R[,2]],
+round( Rt_covid_mumbai3$R[,c(1:5, 8, 11)],2)), 20)
+
 
 ##up-to-date: U Mich dashboard##
 
@@ -152,13 +187,15 @@ dates_india_recent <- as.Date(as.numeric(names(table(all_dates_recent))), origin
 
 ## estimation of SI (prior): Gamma mean = 7 sd = 4.5 ##
 
-t_start <- seq(2, length(india_tab_recent) - 4)
+t_start <- seq(4, length(india_tab_recent) - 4)
 t_end   <- t_start + 4
 
 Rt_covid19_recent <- EpiEstim::estimate_R(incid = india_tab_recent, method = "parametric_si",
                                    config = make_config(list(mean_si = 7, std_si = 4.5, si_parametric_distr = "G",
                                                              t_start = t_start, t_end = t_end, seed = 123)))
 
-tail(data.frame(date=dates_india_recent[-c(1:5)] , round(Rt_covid19_recent$R[,c(1:5, 8, 11)],2)))
+tail(data.frame(date=dates_india_recent[Rt_covid19_recent$R[,2]] ,
+ cases_I= Rt_covid19_recent$I[Rt_covid19_recent$R[,2]],
+round(Rt_covid19_recent$R[,c(1:5, 8, 11)],2)))
 
 
