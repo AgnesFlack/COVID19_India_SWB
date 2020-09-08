@@ -123,6 +123,11 @@ case_series<-as.numeric(unlist(mumbai[-c(1:60,186),5]))
 case_date <- unlist(mumbai[-c(1:60, 186),1])
 length(case_series)
 
+mumbai_tab <- data.frame(date= as.Date(case_date,  origin = "1970-01-01"), incidence=case_series, MA_d21 = c(rep(0, 20),case_series21))
+
+#names(case_series) <- as.Date(case_date,  origin = "1970-01-01")
+
+
 k <-21
 case_series21 <-c()
 for(k in 21:length(case_series)){
@@ -165,6 +170,18 @@ round( Rt_covid_mumbai2$R[,c(1:5, 8, 11)],2)), 10)
 
 tail(data.frame(date=as.Date(case_date[Rt_covid_mumbai3$R[,2]+20],  origin = "1970-01-01"), cases_I= Rt_covid_mumbai3$I[Rt_covid_mumbai3$R[,2]],
 round( Rt_covid_mumbai3$R[,c(1:5, 8, 11)],2)), 20)
+
+
+par(mfrow=c(2,1))
+plot(mumbai_tab$incidence, ty="o", main="Mumbai:Cases")
+plot(mumbai_tab$MA_d21, ty="o",  main="Covid19: Mumbai (21d MA)")
+
+Rt_covid_mumbai2 <- plot(Rt_covid_mumbai2, "R") + theme(legend.position = "none") + ggtitle("Covid19-mumbai(count)-Rt")
+
+Rt_covid_mumbai3 <- plot(Rt_covid_mumbai3, "R") + theme(legend.position = "none") + ggtitle("Covid19-mumbai(MA 21d)-Rt")
+
+gridExtra::grid.arrange(Rt_covid_mumbai2 ,Rt_covid_mumbai3, ncol=1)
+
 
 
 ##up-to-date: U Mich dashboard##
