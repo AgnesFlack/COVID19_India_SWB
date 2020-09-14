@@ -28,12 +28,14 @@ suppressMessages(mumbai<-read_csv(myfile))
 case_series_mumbai<-as.numeric(unlist(mumbai[,7])) ## take out delta case##
 tot_cases_mumbai<-as.numeric(unlist(mumbai[,4])) ## take out delta case##
 case_dates_mumbai <- unlist(mumbai[,1])
-length(case_series_mumbai)
 
-mumbai_tab <- data.frame(date= as.Date(case_dates_mumbai,  origin = "1970-01-01"), confirm=case_series_mumbai, tot_cases=tot_cases_mumbai)
+#length(case_series_mumbai)
+
+mumbai_tab <- data.frame(date= as.Date(case_dates_mumbai,  origin = "1970-01-01"), confirm=case_series_mumbai)
 
 
 mumbai_tab2 <- mumbai_tab[-1,]
+mumbai_tab3 <- data.frame(date= as.Date(case_dates_mumbai,  origin = "1970-01-01"), tot_cases=tot_cases_mumbai)
 
 ##this part is from {incidence}##
 mumbai_tab2$dates.x <- (case_dates_mumbai[-1] -  case_dates_mumbai[-length(case_dates_mumbai)])/2
@@ -82,7 +84,7 @@ dbl_times <- NA
   
   tmp_v     <- matrix(NA, ncol=2, nrow=length(case_dates_mumbai))
     for(j in seq_along(case_dates_mumbai)) {
-      task <- dbl_timr(data = mumbai_tab, end_date = case_dates_mumbai[j], time = 7)
+      task <- dbl_timr(data = mumbai_tab3, end_date = case_dates_mumbai[j], time = 7)
    if(is.na(task)==T) {
      tmp_v[j, ] <-c(NA, NA)
    } else {
