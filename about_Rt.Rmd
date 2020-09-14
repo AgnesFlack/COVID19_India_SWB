@@ -1,34 +1,66 @@
 ---
-title: "About Time varying Reproduction Time "
-date: 2020-08-23
-author:  LiJin Joo [lijin.joo at gmail.com](mailto:lijin.joo@gmail.com) 
-output: html_document
+title: "About Statistics of Disease Dynamics "
+author: "LiJin Joo [lijin.joo at gmail.com](mailto:lijin.joo@gmail.com)"
+date: '2020-09-14'
+output:
+  pdf_document: default
+  html_document: default
 bibliography: covid19.bib
 ---
 
-The following is the introduction of reproduction number in [@cori2013new].
+Reproduction number (R) and epidemic growth rate (r) are two statistics to describe the disease dynamics, or transmission of COVID-19 completely and neither of the two is replaceable to the other.  Reproduction number R tells a direction of growth, whether an epidemic is growing or shrinking, yet does not tell how fast a series of cases is growing at each time point.  On the other hand, growth rate r provides the information on both size and speed of change but does not predict how likely a number of cases will grow or decline at the next time point. The goal of measuring the transmission is to assess the effectiveness of public health intervention, such as lockdown, and to predict the impact of relaxing an intervention [@royal2020Randr] [@govUK2020Randr].
 
-#### Definition of reproduction number (R)
+## Reproduction Number (R)
+The reproduction number (R) is the average number of secondary infections produced by a single infected person and shows the potential of transmission. 
+If R is greater than 1, every infected patient would produce more than one new case on average, thus the disease continues to spread. If R is smaller than 1, a new case from an existing patient is less than one on average, thus the disease would shrink and eventually stop. 
 
-An average number of secondary cases of disease caused by a single infected individual over his or her infectious period. time and situation specific. indicatiing pathogen transmissibility during an epidemic.
 
-#### Why need to monitor R 
+R is also called “time-varying” reproduction number, Rt, or “effective” reduction number Re, to emphasize its ability to reflect time varying parameters, thus, to evaluate the impact of a public health intervention, or evolution of viruses. In contrast to R, the basic reproduction number, R0, is the number of secondary infections produced by a single individual at the beginning of an epidemic and shows the potential of disease transmission in a population never exposed to the pathogen [@delamater2019complexity]. As more individuals are infected over time, Rt include both types of new cases from a population susceptible and from an exposed/immune population. Rt is always less than R0 [@royal2020Randr].
 
-It provides feedback on the effectiveness of interventions and on the need of additional controlling efforts. The goal of epidemic control is to reduce R below 1 and make it as close to 0 as possible.
 
-#### Methods to estimate R
+Various models for transmission of infection and methods to estimate parameters exist, which uses different approaches to infer cases from susceptible, incubation, infectious and recovered (SEIR) populations   [@royal2020Randr].We used the method developed by [@cori2013new], which takes a series of incidences only and learns the values of necessary parameters by its empirical density and Bayesian model assumptions. The formulas are provided by R package {EpiEstim}.
 
-* Transmission modeling to incidence data: model assumption dependent (e.g., presence/absence of a latency period or size of the population studied)
 
-* Statistical modeling by [@wallinga2004different]: taking 1) incidence data and 2) the distribution of the serial interval (the time between the onset of symptoms in a primary case and the onset of symptoms of secondary cases).
+* We used estimate_R() function with a ``parametric_si” option assuming a gamma prior with a mean of 4 days and a standard deviation of 4.75 days and 7 days of smoothing window are used suggested in [@abbott2020estimating]. 
 
-* [@cori2013new] tried to make the estimate more generic and robust.
+* In the previous studies, a gamma prior with a mean of 7 days and a standard deviation of 4.5 days with 4 days of smoothing window is suggested in [@Basu2020]. However, this old prior gives a unreasonably small variation (sd < 0.01) for recent data where Rt is lingering around 1 and new cases remain large.   
 
-The estimate of R at time t requires incidence data from times later than t, thus data are right censored. Improving the accuracy of R estimate, either using a short data collection time or applying smoothing, which demand substantial knowledge and efforts. 
+* The formula for the time varying reproduction numebr Rt from {EpiEstim} is  
+$$  R_t = \frac{I_t}{\sum_{s=1}^{t} I_{t-s} \omega_s} $$ 
+where $I_t$ is the incidence at time $t$ and $\omega$ is a density function of time since infection at $s$ and can be estimated from serial intervals, the average time between symptoms of infection in the transmitter and newly infected. Often, Gamma is assumed.  
+$I_t$ is determined by past cases $I_0, I_1, \dots, I_{t-1}$, which follows a Poisson model:
+$$ P(I_t | I_0, I_1, \dots, I_{t-1}, \omega, R_t) = \frac{(R_t \Lambda_t)^{I_t}}{I_t !}$$
+with  $\Lambda_t = \sum_{s=1}^{t} I_{t-s} \omega_s$.
+
+
+* As $I_t$ is determined by a stochastic process, so $R_t$ is. At time $t$, $R_t$ is right censored as the unreported cases due to 1) the delay in reporting, 2) incubation period of a new case, 3) generation time, a time between infection events. The three additional parameters are additionally considered in {EpiNow2} by [@abbott2020estimating]. One major improvement by additional parameters is more sensible uncertainty estimates. 
+
+
+## Growth Rate (r) 
+The growth rate r shows how quickly the number of infections is changing and is calculated by the second order derivative of the incidence. The growth rate represents who many new cases are occurring for the next time point under the exponential growth assumption and can be an early or instantaneous indicator for the impact of a new intervention, such as a release in lock down. 
+If the growth rate is greater than zero (or positive), the epidemic is growing. If the growth rate is less than zero (or negative) then the epidemic is declining [@royal2020Randr]. 
+
+* Calculation of $r$ is simpler than that of $Rt$. However, its interpreation on an epidemic growth curve from raw incidence is not straightforward due to the non-linear and non-parametric characteristics of the curve. Instead, we provide two more statistics based on $r$ to illustrrate the implications on the change in growth rate. 
+
+
+* Doubling Time ($d_t$): We used the formula from [@Basu2020] as follows.
+$$ d_t = \tau \frac{log(2)}{log(1+r)} $$ 
+where the growth rate $r$ is combined by 
+$$ r = \frac{I_{t} - I_{t-1}}{I_{t-1}}$$
+for $t = 0, 1, \dots, T$  and $\tau$ is a window size of smoothing. We used $\tau =$ 7 days.  
+This indicates that the doubling time for Sep 7 represents how long would take to observe cases doubled, if it increases at a constant growth between Sep 1 to Sep 7. 
+
+* Levitt Statistics: We compute Levitt statistics [@levitt2020predicting] for deaths only.
+ $$ H(t) = log(\frac{X_t}{X_{t-1}}) $$
+where $X_t$ is a cumulative count until day $t$. The statistics shows a rate of incidence changes. If $H(t) < 0$, a time of a new infection is slow down. $H(t)$ enjoys a great compatibility being free of model assumptions, yet its application to incidence is warranted in [@raman2020will] due to the infleunce of testing capacities. 
+
+
+
+
   
 ---
 nocite: |
-  @Gostic2020, @obadia2012r0
+  @Gostic2020, @obadia2012r0, @wallinga2004different
 ...
 
 ### Reference
