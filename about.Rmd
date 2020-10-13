@@ -1,0 +1,94 @@
+
+We used 
+Adjusting for the delay from symptom onset to case confirmation:
+A variable delay occurs from symptom onset to case confirmation (reporting lag) which is attributed to multiple factors including time taken to seek care (patient dependent) and time taken to detect and test the case (healthcare-system dependent). The daily raw data gives us the 'incidence by confirmation'. We transform this incidence by confirmation into incidence by symptom onset, using the delay from symptom onset to confirmation estimated in a study which included 53 symptomatic COVID+ patients in Delhi. (1) The delay had a mean of 3.40 days (95% CI 2.87-3.96) with SD of 2.09 days (95% CI 1.52-2.56) and a median of 2.68 days (95% CI 2.00-3.00) with IQR of 2.03 days (95% CI 1.00-3.00). The gamma distribution with shape parameter 3.45 (95% CI 2.42-5.19) and rate parameter 1.02 (95% CI 0.70-1.60) was the best fit to the distribution. 1000 samples of the delay distribution parameters (φi) were drawn taking into account the uncertainty in the distribution parameters ie. shape and scale for the gamma distribution to serve as the posterior distribution of the delay. For each of the 1000 samples of fitted parameters, the reporting dates (ri) were transformed to give the symptom onset date (oi) by the formula:
+oi = ri - di
+where di (delay from onset to confirmation) ~ Gamma(φi) resulting in 1000 lag adjusted datasets. This process was applied to the incidence by confirmation data for the nation and different states.
+
+Adjusting for yet unconfirmed cases in order to estimate recent onsets:
+The above method can only estimate symptom onsets till dmax days before today, where dmax is the maximum possible reporting lag. The onsets that would have already occurred in these recent days have not yet been confirmed. In order to account for this right truncation of case confirmations, we used a process of binomial upscaling. Consider 't' is the latest date for which the cases have been adjusted. We model the number of onsets on 'l' days before the latest date, o(t-l) with Bernoulli trials with the probability equal to the proportion of the cases that have been confirmed since onset in the following l days. This probability is given by F( l | fi) ie. the CDF (F( x | fi )) of the reporting lag distribution at x = l days. Thus, the number of missed onset dates would be given by:
+o*(t-l) ~ Negbin( n = o(t-l) + 1, p = F( l | fi ) )
+Thus, the total number of onsets on date 'x' is given by o(x)+o*(x). One important point to consider is that this method is prone to high bias when the probability 'p' approaches low values at dates very close to the latest date. Since we were not able to adjust for this bias, the last few dates were dropped when the variability across trials for estimates started increasing due to the high bias.
+
+An average number of secondary cases of disease caused by a single infected individual over his or her infectious period. time and situation specific. indicatiing pathogen transmissibility during an epidemic.
+
+#### Case Doubling Rate and Time
+
+
+#### Methods to estimate R
+
+* Transmission modeling to incidence data: model assumption dependent (e.g., presence/absence of a latency period or size of the population studied)
+
+* Statistical modeling by [@wallinga2004different]: taking 1) incidence data and 2) the distribution of the serial interval (the time between the onset of symptoms in a primary case and the onset of symptoms of secondary cases).
+
+* [@cori2013new] tried to make the estimate more generic and robust.
+
+The estimate of R at time t requires incidence data from times later than t, thus data are right censored. Improving the accuracy of R estimate, either using a short data collection time or applying smoothing, which demand substantial knowledge and efforts. 
+  
+---
+nocite: |
+  @Gostic2020, @obadia2012r0
+...
+
+### Reference
+
+
+
+
+
+Estimating the Effective Reproduction Number at time t
+From the daily number of symptom onsets, the time-varying Rt was calculated using EpiEstim package in R 3.6.3 which uses the Time Dependent Maximum Likelihood approach.(2,3) Serial interval is the time interval between symptom onsets in a primary and a secondary case, and is thus appropriate to calculate Rt from symptom onset based incidence data. Due to lack of serial interval estimates from India, we used the best available estimate from a study including 468 patients in China (4) as a gamma distributed serial interval with a mean of 3.96 days (95% CI 3.53-4.39) and a SD of 4.75 days (95% CI 4.46-5.07). which was in agreement with several other studies.(5-7) We use 7-day sliding windows. The estimates of Rt for each day were combined for the 1000 lag adjusted datasets by calculating pooled mean and pooled standard deviation and a net estimate for 50% and 95% confidence intervals were calculated.
+
+Acknowledgement
+Statistical approaches used by Abbott et al at Epiforecasts have been used to adjust for the reporting delay in Rt estimation. (8).
+
+Limitations/Scope for improvement:
+Since we do not know the true number of infections (irrespective of detection), Rt calculation is based on reported cases. The estimated Rt is unaffected if the ascertainment rate (percent of true infections that are detected) remains fairly constant across time. Any fluctuations in ascertainment due to testing coverage variation will affect the Rt estimates until such time that the ascertainment stabilises at the new level.
+Any government in India does not report the symptom onset dates currently, so a true epicurve can not be made. We have used the best available data from India to project the probability distribution of the delay from symptom onset to confirmation, however this delay can be vastly different for various areas, especially where there is a backlog of tests prolonging it. Putting this data in public domain even in a limited manner will greatly increase the accuracy of Rt estimation over time and better guide public health policy.
+Changes in the assumed serial interval affects the estimated Rt. Lack of a local serial interval estimate will impact the accuracy. Also, serial interval changes over the course of the epidemic (shortens near the peak and due to impact of control measures) which we do not take into account. Again, data from contact tracing programs can address all these challenges in real-time.
+
+Update frequency and last available date:
+Case data is pulled daily from covid19india.org and Rt estimated daily. However as stated above, Rt can only be estimated upto 3-5 days before the estimation date.
+
+
+Smoothening baseline bias for better interpretation
+Since the data shows relative and not absolute mobility change, it is affected by mobility levels at the baseline. This causes a nearer-to-baseline value to appear at weekends as the current weekend mobility does not change muchrelative to pre-lockdown weekends. We smoothen these changes to aid interpretation by continuing the last working day value over the weekends. Note that the raw data reflects the statistical truth, but the smoothening is done so that only changes due to social distancing are visible. 
+
+Limitations:
+The data represents a sample of Google's users, and may or may not represent the exact behavior of a wider population.
+Location accuracy and the understanding of categorized places varies from region to region, so Google cautions against using this data to compare changes between regions with different characteristics (e.g. rural versus urban areas).
+What data is included in the calculation depends on user settings, connectivity, and whether it meets Google's privacy threshold. If the privacy threshold isn't met (when somewhere isn't busy enough to ensure anonymity) Google doesn't show a change for the day. As a result, you may encounter empty fields for certain places and dates.
+
+Update frequency and last available date:
+Google releases mobility data for a particular date after 5-7 days. As soon as data is released, it is updated on our dashboard within a day.
+
+Positivity Rate (7-day moving average of daily positivity rate)
+It is calculated as the number of new COVID+ cases detected in the last 7 days divided by the number of tests done during those 7 days, multiplied by 100. This metric shows us the recent trend (last 1 week) of testing adequacy with respect to the local size of epidemic. Further, comparing this metric with the Cumulative Positivity Rate tells us how the state is doing at testing recently as compared to its baseline performance since the epidemic started. It is generally accepted that a region with good testing levels will have a daily positivity rate of less than 5% for atleast 14 days (according to WHO).
+
+Cumulative Positivity Rate
+It is calculated as the total number of COVID+ till date divided by the total number of tests done till date, multiplied by 100. This metric shows us the 'overall' picture of testing adequacy since the epidemic started. Since it takes time for recent trends to reflect in Cumulative Positivity Rate, this metric is not a good indicator of recent performance of a state in testing.
+
+Corrected CFR
+This naive estimate of CFR (Crude CFR) is known to be biased in ongoing outbreaks, primarily due to two factors- the delay between time of case confirmation and time of death, and the under-reporting of cases due to limitations in testing coverage. The Corrected CFR presented here corrects for the first bias, by adjusting the denominator to reflect the number of cases where death would have been reported if it had occurred, based on known estimates of delay from confirmation to death. The variation in Corrected CFR across states would then reflect the degree of under-reporting or testing adequacy in a particular state (with certain limitations). This approach has been used by Russel et al. (9)
+
+Adjusting for delay from confirmation to death 
+To adjust for the lag from case confirmation to death in the calculation of CFR, we sampled lags from a log-normal distribution and shifted each newly confirmed case forward by the sampled lag to estimate the number of cases that have reached an outcome on any given date CasesClosed(t). By sampling from the distribution of parameters of lag [Mean 13.0 days (95% CI 8.7-20.9) and SD 12.7 days (95% CI 6.4-26.0)], 100 bootstrapped datasets were produced for CasesClosed(t). (10) For each dataset,
+
+
+Limitations:
+In addition to testing variation, the variation of Corrected CFR across states would also depend on other factors like age structure, comorbidity prevalence, and healthcare efficacy and overload status of various states. In states facing severe healthcare capacity overload, the corrected CFR should be interpreted as a testing indicator with extreme caution.
+The Corrected CFR may be overestimated in early stages of the epidemic in an area since the lack of cases in the denominator is exacerbated by the lag correction.
+
+References
+Gupta M, Mohanta SS, Rao A, Parameswaran GG, Agarwal M, Arora M, et al. Transmission dynamics of the COVID-19 epidemic in India and modelling optimal lockdown exit strategies. medRxiv. 2020 May 22;2020.05.13.20096826.
+Cori A, Ferguson NM, Fraser C, Cauchemez S. A New Framework and Software to Estimate Time-Varying Reproduction Numbers During Epidemics. Am J Epidemiol. 2013 Nov 1;178(9):1505-12.
+Wallinga J, Teunis P. Different Epidemic Curves for Severe Acute Respiratory Syndrome Reveal Similar Impacts of Control Measures. Am J Epidemiol. 2004 Sep 15;160(6):509-16.
+Du Z, Xu X, Wu Y, Wang L, Cowling BJ, Meyers LA. Early Release - Serial Interval of COVID-19 among Publicly Reported Confirmed Cases - Volume 26, Number 6-June 2020 - Emerging Infectious Diseases journal - CDC. [cited 2020 Apr 21]; Available from: https://wwwnc.cdc.gov/eid/article/26/6/20-0357_article
+Tindale L, Coombe M, Stockdale JE, Garlock E, Lau WYV, Saraswat M, et al. Transmission interval estimates suggest pre-symptomatic spread of COVID-19. medRxiv. 2020 Mar 6;2020.03.03.20029983
+Zhao S, Gao D, Zhuang Z, Chong M, Cai Y, Ran J, et al. Estimating the serial interval of the novel coronavirus disease (COVID-19): A statistical analysis using the public data in Hong Kong from January 16 to February 15, 2020. medRxiv. 2020 Feb 25;2020.02.21.20026559.
+Nishiura H, Linton NM, Akhmetzhanov AR. Serial interval of novel coronavirus (COVID-19) infections. Int J Infect Dis. 2020 Apr 1;93:284-6.
+Abbott S, Hellewell J, Thompson RN, Sherratt K, Gibbs HP, Bosse NI, et al. Estimating the time-varying reproduction number of SARS-CoV-2 using national and subnational case counts. Wellcome Open Res. 2020 Jun 1;5:112.
+Russell TW, Hellewell J, Abbott S, Golding N, Gibbs H, Jarvis CI. Using a delay-adjusted case fatality ratio to estimate under-reporting [Internet]. CMMID Repository. 2020 [cited 2020 Apr 28]. Available from: https://cmmid.github.io/topics/covid19/global_cfr_estimates.html
+Linton NM, Kobayashi T, Yang Y, Hayashi K, Akhmetzhanov AR, Jung S, et al. Incubation Period and Other Epidemiological Characteristics of 2019 Novel Coronavirus Infections with Right Truncation: A Statistical Analysis of Publicly Available Case Data. J Clin Med. 2020 Feb;9(2):538.
+
+
